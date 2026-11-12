@@ -9,7 +9,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Content.Goobstation.Common.CCVar; // Goobstation - Voice chat
-using Content.Goobstation.Shared.VoiceChat; // Goobstation - Voice chat
+using Content.VoiceChat.Shared; // Goobstation - Voice chat
 using Robust.Client.Player; // Goobstation - Voice chat
 
 namespace Content.Client.Communications.UI
@@ -94,7 +94,7 @@ namespace Content.Client.Communications.UI
         // Goobstation - Voice chat
         private void UpdateVoiceBroadcast()
         {
-            if (!_cfg.GetCVar(GoobCVars.VoiceChatEnabled) ||
+            if (!_cfg.GetCVar(VoiceCVars.VoiceChatEnabled) ||
                 !_entManager.TryGetComponent<VoiceBroadcastConsoleComponent>(Console, out var broadcast))
             {
                 VoiceBroadcastButton.Visible = false;

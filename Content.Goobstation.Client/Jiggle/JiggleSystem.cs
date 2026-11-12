@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Numerics;
 using Content.Client.Graphics;
-using Content.Goobstation.Client.VoiceChat;
+using Content.VoiceChat.Client;
 using Content.Goobstation.Shared.Jiggle;
 using Content.Shared.Mobs.Systems;
 using Robust.Client.GameObjects;

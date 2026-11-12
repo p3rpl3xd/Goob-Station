@@ -2,7 +2,7 @@ using System.Linq;
 using System.Numerics;
 using Content.Client.Stylesheets;
 using Content.Goobstation.Common.CCVar;
-using Content.Goobstation.Shared.VoiceChat;
+using Content.VoiceChat.Shared;
 using Content.Shared.Chat;
 using Content.Shared.Radio;
 using Robust.Client.Graphics;
@@ -47,8 +47,8 @@ public sealed class VoiceRadioButton : Button
 
     public void UpdateState()
     {
-        if (!_cfg.GetCVar(GoobCVars.VoiceChatEnabled) ||
-            !_cfg.GetCVar(GoobCVars.VoiceChatRadioEnabled) ||
+        if (!_cfg.GetCVar(VoiceCVars.VoiceChatEnabled) ||
+            !_cfg.GetCVar(VoiceCVars.VoiceChatRadioEnabled) ||
             _player.LocalEntity is not { } local ||
             !_entManager.TryGetComponent<VoiceRadioComponent>(local, out var radio) ||
             radio.Channels.Count == 0 && radio.Receive.Count == 0)
@@ -238,7 +238,7 @@ public sealed class VoiceRadioPopup : Popup
 
     public void SetState(VoiceRadioComponent radio)
     {
-        var mutedValue = _cfg.GetCVar(GoobCVars.VoiceChatRadioMuted);
+        var mutedValue = _cfg.GetCVar(VoiceCVars.VoiceChatRadioMuted);
         var mutedChanged = mutedValue != _mutedValue;
         if (mutedChanged)
         {
@@ -410,13 +410,13 @@ public sealed class VoiceRadioPopup : Popup
         var ordered = _muted.ToList();
         ordered.Sort(string.CompareOrdinal);
         _mutedValue = string.Join(',', ordered);
-        _cfg.SetCVar(GoobCVars.VoiceChatRadioMuted, _mutedValue);
+        _cfg.SetCVar(VoiceCVars.VoiceChatRadioMuted, _mutedValue);
         _settingsDirty = true;
     }
 
     private void SyncVolume()
     {
-        var percent = MathF.Round(Math.Clamp(_cfg.GetCVar(GoobCVars.VoiceChatRadioVolume), 0f, 2f) * 100f);
+        var percent = MathF.Round(Math.Clamp(_cfg.GetCVar(VoiceCVars.VoiceChatRadioVolume), 0f, 2f) * 100f);
         _volume.SetValueWithoutEvent(percent);
         _volumeValue.Text = Loc.GetString("voice-radio-popup-volume-value", ("percent", (int) percent));
     }
@@ -425,7 +425,7 @@ public sealed class VoiceRadioPopup : Popup
     {
         var percent = (int) MathF.Round(_volume.Value);
         _volumeValue.Text = Loc.GetString("voice-radio-popup-volume-value", ("percent", percent));
-        _cfg.SetCVar(GoobCVars.VoiceChatRadioVolume, percent / 100f);
+        _cfg.SetCVar(VoiceCVars.VoiceChatRadioVolume, percent / 100f);
         _settingsDirty = true;
     }
 

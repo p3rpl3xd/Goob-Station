@@ -498,7 +498,8 @@ public sealed class TelephoneSystem : SharedTelephoneSystem
         return this.IsPowered(entity, EntityManager);
     }
 
-    public void KeepCallAlive(Entity<TelephoneComponent> entity) // Goobstation - Voice chat
+    // Used by the optional voice-chat telephone adapter. StateStartTime is not writable from other types.
+    public void KeepCallAlive(Entity<TelephoneComponent> entity)
     {
         if (entity.Comp.CurrentState == TelephoneState.InCall)
             entity.Comp.StateStartTime = _timing.CurTime;

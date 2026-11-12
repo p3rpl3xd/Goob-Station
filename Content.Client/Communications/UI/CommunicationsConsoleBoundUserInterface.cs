@@ -3,7 +3,7 @@
 using Content.Shared.CCVar;
 using Content.Shared.Chat;
 using Content.Shared.Communications;
-using Content.Goobstation.Shared.VoiceChat; // Goobstation - Voice chat
+using Content.VoiceChat.Shared; // Goobstation - Voice chat
 using Robust.Client.UserInterface;
 using Robust.Shared.Configuration;
 

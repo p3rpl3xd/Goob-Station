@@ -27,7 +27,8 @@ using Content.Shared.Preferences;
 using Content.Client.Guidebook;
 using Content.Client.Lobby.UI;
 using Content.Client.Players.PlayTimeTracking;
-using Content.Goobstation.Common.CCVar; // Goobstation - Voice chat
+using Content.Goobstation.Common.CCVar; // Goobstation
+using Content.VoiceChat.Shared;
 
 namespace Content.Client.UserInterface.Systems.EscapeMenu;
 
@@ -163,7 +164,7 @@ public sealed class EscapeUIController : UIController, IOnStateEntered<GameplayS
 
         // Hide wiki button if we don't have a link for it.
         _escapeWindow.WikiButton.Visible = _cfg.GetCVar(CCVars.InfoLinksWiki) != "";
-        _cfg.OnValueChanged(GoobCVars.VoiceChatEnabled, OnVoiceChatEnabledChanged, true); // Goobstation - Voice chat
+        _cfg.OnValueChanged(VoiceCVars.VoiceChatEnabled, OnVoiceChatEnabledChanged, true); // Goobstation - Voice chat
 
         CommandBinds.Builder
             .Bind(EngineKeyFunctions.EscapeMenu,
@@ -180,7 +181,7 @@ public sealed class EscapeUIController : UIController, IOnStateEntered<GameplayS
         }
 
         CloseCharacterSetup(); // Goobstation - Character customization in escape menu
-        _cfg.UnsubValueChanged(GoobCVars.VoiceChatEnabled, OnVoiceChatEnabledChanged); // Goobstation - Voice chat
+        _cfg.UnsubValueChanged(VoiceCVars.VoiceChatEnabled, OnVoiceChatEnabledChanged); // Goobstation - Voice chat
 
         CommandBinds.Unregister<EscapeUIController>();
     }

@@ -1,7 +1,8 @@
 using System.Globalization;
 using System.Linq;
 using Content.Client.Guidebook;
-using Content.Goobstation.Client.VoiceChat;
+using Content.VoiceChat.Client;
+using Content.VoiceChat.Shared;
 using Content.Goobstation.Common.CCVar;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -44,7 +45,7 @@ public sealed partial class NewsManager
         LoadState();
 
         _cfg.OnValueChanged(GoobCVars.NewsPinned, _ => Refresh());
-        _cfg.OnValueChanged(GoobCVars.VoiceChatEnabled, _ => Refresh());
+        _cfg.OnValueChanged(VoiceCVars.VoiceChatEnabled, _ => Refresh());
         _voice.WebConnectedChanged += _ => Refresh();
         _proto.PrototypesReloaded += OnPrototypesReloaded;
 
