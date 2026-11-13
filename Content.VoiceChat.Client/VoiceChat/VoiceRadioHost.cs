@@ -30,10 +30,9 @@ public static class VoiceRadioHost
             if (parent == null)
                 continue;
 
-            var button = new VoiceRadioButton
-            {
-                StyleClasses = { ChannelSelectorItemButton.StyleClassChatSelectorOptionButton },
-            };
+            var button = new VoiceRadioButton { HorizontalExpand = false };
+            button.AddStyleClass("chatSelectorOptionButton");
+            button.AddStyleClass("ChatSelectorOptionButton");
             parent.AddChild(button);
             var index = 0;
             foreach (var child in parent.Children)

@@ -4,7 +4,6 @@
 
 using System.Linq;
 using Content.Client.Options.UI.Tabs;
-using Content.Client.Stylesheets;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -36,7 +35,7 @@ public static class VoiceKeybindMenu
             container.AddChild(new Label
             {
                 Text = Loc.GetString("voice-keybinds-header"),
-                StyleClasses = { StyleClass.LabelKeyText },
+                StyleClasses = { "LabelKeyText" },
             });
             container.AddChild(new VoiceKeyRow(input, VoiceKeys.OpenWindow, Keyboard.Key.F6, "ui-options-function-voice-chat-window"));
             container.AddChild(new VoiceKeyRow(input, VoiceKeys.PushToTalk, Keyboard.Key.N, "ui-options-function-voice-push-to-talk"));

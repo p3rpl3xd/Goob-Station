@@ -4,8 +4,6 @@
 
 using System.Linq;
 using System.Numerics;
-using Content.Client.Stylesheets;
-using Content.Client.UserInterface.Systems.Chat.Controls;
 using Content.VoiceChat.Shared;
 using Content.Shared.Chat;
 using Content.Shared.Radio;
@@ -186,9 +184,9 @@ public sealed class VoiceRadioPopup : Popup
         _hearItems = new GridContainer { Columns = HearColumns, HSeparationOverride = 8, VSeparationOverride = 2 };
 
         _hearBulk = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, SeparationOverride = 4 };
-        var muteAll = new Button { Text = Loc.GetString("voice-radio-popup-mute-all"), StyleClasses = { StyleClass.ButtonOpenRight } };
+        var muteAll = new Button { Text = Loc.GetString("voice-radio-popup-mute-all"), StyleClasses = { "OpenRight" } };
         muteAll.OnPressed += _ => SetHearingAll(false);
-        var unmuteAll = new Button { Text = Loc.GetString("voice-radio-popup-unmute-all"), StyleClasses = { StyleClass.ButtonOpenLeft } };
+        var unmuteAll = new Button { Text = Loc.GetString("voice-radio-popup-unmute-all"), StyleClasses = { "OpenLeft" } };
         unmuteAll.OnPressed += _ => SetHearingAll(true);
         _hearBulk.AddChild(muteAll);
         _hearBulk.AddChild(unmuteAll);
@@ -319,7 +317,7 @@ public sealed class VoiceRadioPopup : Popup
         var button = new Button
         {
             Text = text,
-            StyleClasses = { ChannelSelectorItemButton.StyleClassChatSelectorOptionButton },
+            StyleClasses = { "chatSelectorOptionButton", "ChatSelectorOptionButton" },
         };
         button.OnPressed += _ => TalkSelected?.Invoke(channel);
         _talkItems.AddChild(button);
