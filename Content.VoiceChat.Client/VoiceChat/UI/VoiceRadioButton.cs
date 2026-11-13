@@ -1,7 +1,11 @@
+// SPDX-FileCopyrightText: 2026 Aidenkrz <28298836+Aidenkrz@users.noreply.github.com>
+// SPDX-FileCopyrightText: 2026 Aiden <aiden@djkraz.com>
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 using System.Linq;
 using System.Numerics;
 using Content.Client.Stylesheets;
-using Content.Goobstation.Common.CCVar;
+using Content.Client.UserInterface.Systems.Chat.Controls;
 using Content.VoiceChat.Shared;
 using Content.Shared.Chat;
 using Content.Shared.Radio;
@@ -10,10 +14,11 @@ using Robust.Client.Player;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Configuration;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
-namespace Content.Client.UserInterface.Systems.Chat.Controls;
+namespace Content.VoiceChat.Client.UI;
 
 public sealed class VoiceRadioButton : Button
 {
@@ -43,6 +48,12 @@ public sealed class VoiceRadioButton : Button
         Popup = UserInterfaceManager.CreatePopup<VoiceRadioPopup>();
         Popup.OnVisibilityChanged += OnPopupVisibilityChanged;
         Popup.TalkSelected += OnTalkSelected;
+    }
+
+    protected override void FrameUpdate(FrameEventArgs args)
+    {
+        base.FrameUpdate(args);
+        UpdateState();
     }
 
     public void UpdateState()

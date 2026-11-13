@@ -71,8 +71,6 @@ namespace Content.Shared.Input
         public static readonly BoundKeyFunction ZoomIn = "ZoomIn";
         public static readonly BoundKeyFunction ResetZoom = "ResetZoom";
         public static readonly BoundKeyFunction ResistGrab = "ResistGrab"; // Goobstation - Grab Intent
-        public static readonly BoundKeyFunction VoicePushToTalk = "VoicePushToTalk";
-        public static readonly BoundKeyFunction VoicePushToTalkRadio = "VoicePushToTalkRadio";
         public static readonly BoundKeyFunction NamePeek = "NamePeek"; // Goob
 
         // Shitmed Change Start

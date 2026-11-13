@@ -3,6 +3,7 @@
 using Content.Client.Stylesheets;
 using Content.Shared.Chat;
 using Content.Shared.Input;
+using Content.VoiceChat.Client.UI;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Timing; // Goobstation - Voice chat
 
