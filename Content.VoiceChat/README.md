@@ -1,90 +1,41 @@
 # Portable proximity voice chat
 
-Self-contained proximity voice for a `space-wizards/space-station-14` fork. Copy the module, add the project references below, set the `[voice]` CVars, and put HTTPS in front of `/voice` and `/voice/ws`. Radio, telephones, holopads, station AI, voice logs, and voice-of-god are optional adapters. The connect window does not use any news UI.
+Proximity voice for a `space-wizards/space-station-14` fork. The sources are compiled into that fork's `Content.Shared`, `Content.Client`, and `Content.Server` assemblies. There is no `Content.VoiceChat.*.dll`. The launcher sandbox and the client zip already ship those three assemblies, so nothing extra has to be whitelisted or packed. NWaves is server-only and is not part of the client download.
 
 The code is **AGPL-3.0-or-later**. Keep the SPDX headers. Do not relicense it as MIT.
 
 Authors: Aidenkrz &lt;28298836+Aidenkrz@users.noreply.github.com&gt; and Aiden &lt;aiden@djkraz.com&gt;.
 
-## What to copy
+## Install
 
-Copy these directories next to `Content.Server` / `Content.Client`:
+Copy these directories next to `Content.Server`:
 
-| Directory | Required | Role |
-| --- | --- | --- |
-| `Content.VoiceChat.Shared` | yes | CVars, codec, net messages. `Content.VoiceChat.Build.props` in this folder sets the target framework from the engine, which SDK 9 needs. |
-| `Content.VoiceChat.Server` | yes | Proximity, websocket, embedded `/voice` page. `EntryPoint` registers IoC. |
-| `Content.VoiceChat.Client` | yes | Playback, push-to-talk, connect window. `EntryPoint` registers IoC. |
-| `Content.VoiceChat.Effects` | optional | NWaves muffling and the voice-of-god pitch effect |
-| `Content.VoiceChat.Adapters` | optional | Radio, telephone, station AI, logs, voice-of-god |
-| `Resources/Locale/en-US/_VoiceChat` | yes | Fluent strings |
+- `Content.VoiceChat.Shared`
+- `Content.VoiceChat.Server`
+- `Content.VoiceChat.Client`
+- `Content.VoiceChat.Effects`
+- `Content.VoiceChat.Adapters`
+- `Resources/Locale/en-US/_VoiceChat`
 
-The core projects do not reference `Content.Server` or `Content.Client`. Adapters are compiled *into* those projects so they can use fork types without a project cycle.
+Do not add project references to voice `.csproj` files. Those projects are not part of the install. A separate `Content.VoiceChat.Client.dll` is loaded by the launcher and fails the sandbox.
 
-Any `Content.*.dll` in the server or client output is loaded. The module entry points run with the rest. No extra IoC file is required.
-
-## Wire-up
-
-In `Content.Server/Content.Server.csproj`, inside the existing `ProjectReference` item group:
+Create `Directory.Build.targets` at the repository root, or add the import if that file already exists:
 
 ```xml
-<ProjectReference Include="..\Content.VoiceChat.Server\Content.VoiceChat.Server.csproj" />
-<ProjectReference Include="..\Content.VoiceChat.Effects\Content.VoiceChat.Effects.csproj" />
+<Project>
+  <Import Project="Content.VoiceChat.Shared/Content.VoiceChat.Install.targets" />
+</Project>
 ```
 
-Skip the Effects reference if you are not shipping muffling or voice-of-god. Then compile the adapters you want (omit an include to leave that feature out):
+That file compiles the sources into the content assemblies, embeds the `/voice` page, and references NWaves from the server. It also picks the compile symbols for this fork's radio, voice mask, ticker, and telephone types. You do not set those by hand.
 
-```xml
-<ItemGroup>
-  <Compile Include="..\Content.VoiceChat.Adapters\Server\Stock\**\*.cs" Link="VoiceChatAdapters\Stock\%(Filename)%(Extension)" />
-  <Compile Include="..\Content.VoiceChat.Adapters\Server\God\**\*.cs" Link="VoiceChatAdapters\God\%(Filename)%(Extension)" />
-</ItemGroup>
-```
-
-`Server/Goob` (megaphone, intrinsic radio) is Goob-only. Do not include it on a stock fork.
-
-In `Content.Client/Content.Client.csproj`:
-
-```xml
-<ProjectReference Include="..\Content.VoiceChat.Client\Content.VoiceChat.Client.csproj" />
-<ProjectReference Include="..\Content.VoiceChat.Shared\Content.VoiceChat.Shared.csproj" />
-```
-
-```xml
-<ItemGroup>
-  <Compile Include="..\Content.VoiceChat.Adapters\Client\Stock\**\*.cs" Link="VoiceChatAdapters\%(Filename)%(Extension)" />
-</ItemGroup>
-```
-
-`Client/God` is the voice-of-god screen cue. Include it only together with the server God adapter and Effects.
-
-If the fork uses central package management and you reference Effects, add this to `Directory.Packages.props`:
+Add NWaves to `Directory.Packages.props`:
 
 ```xml
 <PackageVersion Include="NWaves" Version="0.9.6" />
 ```
 
-The Effects project must not set a `Version` on that `PackageReference`.
-
-### Compile symbols
-
-Set these on `Content.Server` only when the fork's content matches. A fork that still matches Goob's content layout sets `VOICECHAT_RADIO_EXTRAS` and nothing else. Current Wizden master sets `VOICECHAT_UPSTREAM` only. Frontier master sets `VOICECHAT_SERVER_COMPONENTS` only.
-
-| Symbol | When |
-| --- | --- |
-| `VOICECHAT_SERVER_COMPONENTS` | `ActiveRadioComponent` still lives in `Content.Server.Radio.Components`, and `SurveillanceCameraComponent` is in the `Content.Server.SurveillanceCamera` namespace. Also treats a voice mask as active whenever the component is present (`VoiceMaskComponent.Active` does not exist). Frontier master today. |
-| `VOICECHAT_RADIO_EXTRAS` | `RadioChannelPrototype` has `SendWhitelist` / `ReceiveWhitelist`, and `RadioSpeakerComponent` has `SpeakNormally`. Goob does. Current Wizden master and Frontier master do not. |
-| `VOICECHAT_UPSTREAM` | Content matches current Wizden master: `GameTicker`, `RoundStartingEvent`, and `StationSystem` are in `Content.Shared`; `VoiceMaskComponent` is in `Content.Shared.VoiceMask`; telephone links, the telephone speaker, and holopad holograms are `EntityUid` rather than `Entity<T>`. Goob and Frontier leave this unset. |
-
-```xml
-<DefineConstants>$(DefineConstants);VOICECHAT_SERVER_COMPONENTS</DefineConstants>
-```
-
-Channel sets that are still `HashSet<string>` (Frontier) are handled by `VOICECHAT_SERVER_COMPONENTS`. Forks that moved radio to `ProtoId` (Wizden, Goob) leave that symbol unset.
-
-### Telephone calls
-
-`TelephoneComponent.StateStartTime` cannot be written from another type. If you compile `TelephoneVoiceFeature`, add this public method to the fork's `TelephoneSystem`:
+If `Content.Server/Telephone/TelephoneSystem.cs` does not already contain `KeepCallAlive`, add:
 
 ```csharp
 public void KeepCallAlive(Entity<TelephoneComponent> entity)
@@ -94,14 +45,42 @@ public void KeepCallAlive(Entity<TelephoneComponent> entity)
 }
 ```
 
-## CVars
+`_timing` is the `IGameTiming` dependency already on `TelephoneSystem`. The build stops with this snippet if the method is missing. Forks with no telephones delete `Content.VoiceChat.Adapters/Server/Stock/TelephoneVoiceFeature.cs` instead.
 
-Names match the old Goob `voice.*` CVars. Server and client both load `VoiceCVars`, so registering them again in the fork will throw.
+In the server config:
 
 ```
 [voice]
 enabled = true
-public_url = https://example.com/voice/
+public_url = http://127.0.0.1:1212/voice/
+ws_bind = 127.0.0.1:1213
+```
+
+Use the host and port from `status.bind` in `public_url`. Leave `ws_url` empty. On plain HTTP the page tries `/voice/ws` on the status port, then connects to `ws_bind`. Localhost is a secure context, so the microphone works without HTTPS. A public server needs TLS. Proxy `/voice/ws` to `voice.ws_bind` and `/voice/` to the status port. Do not publish port 1213.
+
+Rebuild the client and the server. In game, F6 or the console command `voicechat` opens the connect window. Hold N for proximity and M for radio. Two clients on one server can hear each other in the lobby, or in range after the round starts. One client can enable hear-self on that window.
+
+Optional admin voice-of-god is off unless the repository sets `<VoiceChatIncludeGod>true</VoiceChatIncludeGod>` before the import, the way Goob does in `Directory.Build.props`. Megaphone and intrinsic-voice adapters compile only when `LoudspeakerHolderComponent` exists.
+
+## What the targets file checks
+
+Building `Content.Server` fails with a specific message when:
+
+- `Content.VoiceChat.Shared/VoiceChat/VoiceCVars.cs` is missing
+- `Directory.Packages.props` has no `NWaves` package version
+- `TelephoneSystem.KeepCallAlive` is missing
+- `Content.Server/Telephone/TelephoneSystem.cs` does not exist
+
+After a successful server build it prints the detected symbols (`VOICECHAT_SERVER_COMPONENTS`, `VOICECHAT_SHARED_TICKER`, `VOICECHAT_SHARED_VOICE_MASK`, `VOICECHAT_VOICE_MASK_ACTIVE`, `VOICECHAT_RADIO_EXTRAS`, `VOICECHAT_UID_TELEPHONE`).
+
+## CVars
+
+Server and client both load `VoiceCVars`. Registering the same names again throws.
+
+```
+[voice]
+enabled = true
+public_url =
 ws_bind = 127.0.0.1:1213
 trusted_proxies =
 max_connections_per_ip = 6
@@ -119,79 +98,43 @@ shout_threshold = 14
 whisper_threshold = 5
 ```
 
-Client-only, saved in the player config: `voice.volume` (0–2), `voice.hear_self`, `voice.speaker_list`, `voice.radio_volume`, `voice.radio_muted`.
+`voice.public_url` is the page the client opens. Empty derives it from `hub.server_url`. Client-only: `voice.volume` (0–2), `voice.hear_self`, `voice.speaker_list`, `voice.radio_volume`, `voice.radio_muted`.
 
-`voice.public_url` is the page the client opens. When it is empty, the server derives it from `hub.server_url` (`ss14s`/`https` become `https`, `ss14`/`http` become `http`, path `/voice/`). `voice.ws_url` is optional. When it is empty, the page uses the same origin at `/voice/ws`.
+`voice.trusted_proxies` is a comma-separated list of proxy IPs allowed to set `X-Real-IP` and `X-Forwarded-For`. Loopback and private addresses are always trusted.
 
-In game, **F6** or the console command `voicechat` opens the connect window. Hold **N** for proximity push-to-talk and **M** for radio push-to-talk. Both are registered in code, so they do not need `keybinds.yml` entries.
+## Fork notes
 
-## Hosting
+The same install is enough for the forks below. Symbols are detected from the tree. No per-fork project edits.
 
-The microphone page uses `getUserMedia`. Browsers only allow that on a secure context: HTTPS, or plain HTTP on localhost. Production needs TLS.
+| Fork | Layout the detector uses |
+| --- | --- |
+| Wizden master | Shared ticker, shared voice mask with `Active`, `EntityUid` telephone links |
+| Goob | Server ticker, server voice mask with `Active`, radio send/receive whitelists, `SpeakNormally`, voice-of-god and megaphone because those types exist |
+| Frontier | Server radio components (`HashSet<string>` channels), server surveillance-camera namespace, server voice mask without `Active` |
+| RMC-14 | Same server radio layout as Frontier. `ActiveListenerComponent` still lives in `Content.Server.Speech`, which is detected |
+| Einstein Engines | Same server radio layout. It vendors `Content.Goobstation.*` but not the loudspeaker component, so the megaphone adapter is left out. Its station-AI vision component has no `NeedsPower`, so that adapter is left out too |
+| Delta-V | Shared voice mask with `Active`, server ticker, `Entity<TelephoneComponent>` links |
+| Monolith | `ActiveRadioComponent` is under `Content.Shared/_Goobstation` but the namespace is `Content.Shared.Radio.Components`, and channel sets are still `HashSet<string>`. `RadioSendAttemptEvent` takes a frequency. No ingestion-blocker component, and station-AI vision has no `NeedsPower`, so those checks are skipped |
 
-The game server serves the page on the status HTTP listener (`status.bind`), under `GET /voice/` (a request to `/voice` redirects to `/voice/`). Static files are embedded in `Content.VoiceChat.Server`. The status host does **not** accept the voice WebSocket. `GET /voice/ws` on the status port returns an error that says so.
+## Troubleshooting
 
-Voice audio is a separate TCP listener at `voice.ws_bind` (default `127.0.0.1:1213`). Bind it to loopback and proxy it. Do not publish 1213 on the internet.
+**NETSDK1013, TargetFramework is blank.** This happened when the voice code was its own project and an empty global `TargetFramework` (a parent `Directory.Build.props` or `/p:TargetFramework=`) could not be overwritten. The install no longer has those projects. If a fork's own content project still reports it, put `TreatAsLocalProperty="TargetFramework"` on that `<Project>` element and set a literal framework such as `net9.0` or `net10.0` instead of `$(TargetFramework)`.
 
-Example Caddy site in front of a status port on `127.0.0.1:1212` and voice on `127.0.0.1:1213`:
+**Launcher client crashes during the sandbox type check, naming `Content.VoiceChat.Shared` or `Content.VoiceChat.Client`.** A previous install left those DLLs next to `Content.Client.dll`, or the fork added a `ProjectReference` to them. Delete `Content.VoiceChat.*.dll` from the client output and do not reference voice projects. The client build also deletes leftovers from `$(TargetDir)`.
 
-```
-example.com {
-    handle /voice/ws* {
-        reverse_proxy 127.0.0.1:1213
-    }
-    handle /voice* {
-        reverse_proxy 127.0.0.1:1212
-    }
-}
-```
+**`voice.enabled` is missing when the client UI loads.** `VoiceCVars` must keep `[CVarDefs]`. Without it the configuration manager never registers the names.
 
-nginx is the same split: `location /voice/ws` proxies to `voice.ws_bind` with `Upgrade` and `Connection` headers; `location /voice/` proxies to the status port.
+**Build says NWaves is missing.** Add the `PackageVersion` line above. NWaves is MIT (Tim Sharii / ar1st0crat) and is used only on the server. It is not in the client zip.
 
-`voice.trusted_proxies` is a comma-separated list of proxy IPs. Those peers may set `X-Real-IP` and `X-Forwarded-For`. Loopback and private addresses are always trusted. Set this to the proxy's address when the proxy is not on a private IP, or the per-IP connection cap will see the proxy instead of the player.
+**Build says `KeepCallAlive` is missing.** Add the method in the install section. `StateStartTime` cannot be written from another type.
 
-## Core and adapters
+**F6 does nothing.** `Directory.Build.targets` is not importing `Content.VoiceChat.Install.targets`, so the entry point was never compiled. `voicechat` is registered by that entry point.
 
-Core, always on once the projects are referenced and `voice.enabled` is true:
+**Microphone stays blocked.** The page is not a secure context. Use `http://127.0.0.1` or `http://localhost` for a local test, or HTTPS in production, and proxy `/voice/ws` to `voice.ws_bind`.
 
-- Same-map proximity, with wall and container checks in `VoiceChatSystem`
-- Lobby voice (`voice.lobby`), detected without a compile-time reference to `GameTicker`
-- IMA-ADPCM-style codec at 16 kHz, in C# and in the embedded page. No Opus and no native library
-- Connect window, speaker list, push-to-talk
+## License
 
-`IVoiceFeature` in `Content.VoiceChat.Server` is the extension point. An adapter is an `EntitySystem` that calls `_features.Add(this)` from `Initialize`. Default interface methods mean you only implement the hooks you need (`Contribute`, `AdjustRange`, `AdjustMuffle`, `TrySecondaryListener`, and the rest on `IVoiceFeature`).
-
-| Adapter | Include | Needs |
-| --- | --- | --- |
-| `VoiceRadioSystem`, `VoiceBroadcastSystem` | Stock | Headset, encryption keys, comms console. Radio frequency is read by reflection on `RadioSystem.GetFrequency`, so a fork without that method still compiles and just skips the telecom frequency check. There is no inter-map telecom transmitter bridge. |
-| `TelephoneVoiceFeature` | Stock | `KeepCallAlive` above. Holopads ride the same telephone components. |
-| `StationAiVoiceFeature` | Stock | Station AI eye and cameras |
-| `PressureMuffleFeature` | Stock | `PressureProtectionComponent` |
-| `VoiceMaskFeature` | Stock | Voice mask name override |
-| `VoiceLogSystem` and the log commands / EUI | Stock | Writes recordings under the server data dir. Set `voice.log_enabled` false to skip recording; omit the files to drop the admin UI. |
-| `VoiceGodFeature`, `VoiceOfGodCommand`, client `VoiceGodCueSystem` | God | Effects project. Admin command, not proximity. |
-| `MegaphoneVoiceFeature`, `IntrinsicVoiceFeature` | Goob | Goob megaphone and intrinsic-voice components. Not in the stock set. |
-| Canadian indicator shader | none | Stays in Goob's client. `BeforePostShaderRenderEvent` is a different type on engine 267 than on 293, so it is not in the portable set. The speaking overlay calls `VoiceIndicatorHooks.ReplacesIndicator` instead of referencing that shader. |
-
-Omit Effects and proximity still works. Speech is unfiltered, and voice-of-god has no pitch effect.
-
-## Engine range
-
-The projects set `LangVersion` 12 and import `RobustToolbox/Imports/*.props` only when those files exist (engine 293+). On 267 they fall back to direct references to `Robust.Shared`, `Robust.Server` / `Robust.Client`, Lidgren, and NetSerializer.
-
-Verified by compiling this module into each fork's content projects (scratch trees only, nothing pushed):
-
-| Fork | Engine | What compiled |
-| --- | --- | --- |
-| Goob `cursor/voice-chat-portable-e29f` | RobustToolbox `0a83625`, **293.0.0**, net10 | `Content.Goobstation.Server` with Stock + Goob + God adapters and Effects, and `Content.Goobstation.Client` with Stock + God client adapters |
-| Frontier master `e1b0dc84` | RobustToolbox `feb9e1d`, **267.3.0**, net9 | `Content.Server` and `Content.Client` with Stock adapters, God server adapter, and Effects. `VOICECHAT_SERVER_COMPONENTS` set. No `VOICECHAT_RADIO_EXTRAS`. |
-| Wizden master `7f413a98` | RobustToolbox `d56b0d0`, **295.0.3**, net10 | `Content.Server` with Stock + God adapters and Effects, `VOICECHAT_UPSTREAM` set, and `Content.VoiceChat.Client`. The full `Content.Client` project did not finish in the scratch tree: Robust's XAML task could not load `Robust.Xaml`. The same client sources compiled into Goob's client on 293 and Frontier's client on 267. |
-
-Core looks up `GhostComponent` by type name, in either `Content.Shared.Ghost` or `Content.Shared.Ghost.Components`, so that namespace move does not need a symbol. Mute is enforced through `ActionBlockerSystem.CanSpeak` (`SpeakAttemptEvent`), which covers both the older `MutedComponent` and Wizden's mute status effect. Pins from 267.3.0 through 295.0.3 were built. Versions between those pins were not each built.
-
-## License and notices
-
-- Module source: AGPL-3.0-or-later. Keep the SPDX headers on every file you copy. Forks that are themselves AGPL-3.0-or-later can take this code. An MIT-only tree cannot.
-- [NWaves](https://github.com/ar1st0crat/NWaves) 0.9.6, used only by `Content.VoiceChat.Effects`: MIT, author Tim Sharii (ar1st0crat). The package is not vendored; NuGet ships the license.
-- Noto Sans woff2 files embedded in the voice page (`noto-sans-regular.woff2`, `noto-sans-bold.woff2`): Apache-2.0. The license text ships beside them as `VoiceChat/Web/NotoSans-LICENSE.txt`.
-- Boxfont Round (`boxfont-round.woff2`): CC-0. Credits ship as `VoiceChat/Web/Boxfont-round-credits.txt`.
+- Module source: AGPL-3.0-or-later. Keep the SPDX headers.
+- [NWaves](https://github.com/ar1st0crat/NWaves) 0.9.6: MIT, author Tim Sharii (ar1st0crat). NuGet ships the license. It is not vendored.
+- Noto Sans files embedded in the voice page: Apache-2.0. The license is `Content.VoiceChat.Server/VoiceChat/Web/NotoSans-LICENSE.txt`.
+- Boxfont Round: CC-0. Credits are `Content.VoiceChat.Server/VoiceChat/Web/Boxfont-round-credits.txt`.

@@ -6,6 +6,7 @@ using Robust.Shared.Configuration;
 
 namespace Content.VoiceChat.Shared;
 
+[CVarDefs]
 public static class VoiceCVars
 {
     public static readonly CVarDef<bool> VoiceChatEnabled =

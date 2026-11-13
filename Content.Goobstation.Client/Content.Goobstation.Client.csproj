@@ -21,9 +21,6 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   <ItemGroup>
     <ProjectReference Include="..\Content.Client\Content.Client.csproj" />
     <ProjectReference Include="..\Content.Goobstation.Shared\Content.Goobstation.Shared.csproj" />
-    <ProjectReference Include="..\Content.VoiceChat.Client\Content.VoiceChat.Client.csproj" />
-    <Compile Include="..\Content.VoiceChat.Adapters\Client\Stock\**\*.cs" Link="VoiceChatAdapters\%(Filename)%(Extension)" />
-    <Compile Include="..\Content.VoiceChat.Adapters\Client\God\**\*.cs" Link="VoiceChatAdapters\God\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <Import Project="..\RobustToolbox\MSBuild\Robust.Properties.targets" />

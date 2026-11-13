@@ -17,8 +17,13 @@ using Content.Shared.Radio.Components;
 #if VOICECHAT_SERVER_COMPONENTS
 using Content.Server.Radio.Components;
 #endif
+#if VOICECHAT_SERVER_SPEECH
+using Content.Server.Speech;
+using Content.Server.Speech.Components;
+#else
 using Content.Shared.Speech;
 using Content.Shared.Speech.Components;
+#endif
 using Robust.Shared.Player;
 using Content.Shared.Whitelist;
 using Robust.Server.Player;
@@ -215,7 +220,7 @@ public sealed partial class VoiceRadioSystem : EntitySystem, IVoiceFeature
 
     public void GetReceivers(EntityUid radioSource, RadioChannelPrototype channel, List<EntityUid> receivers)
     {
-        var sendAttemptEv = new RadioSendAttemptEvent(channel, radioSource);
+        var sendAttemptEv = CreateSendAttempt(channel, radioSource);
         RaiseLocalEvent(ref sendAttemptEv);
         RaiseLocalEvent(radioSource, ref sendAttemptEv);
         if (sendAttemptEv.Cancelled)
@@ -262,6 +267,15 @@ public sealed partial class VoiceRadioSystem : EntitySystem, IVoiceFeature
 
             receivers.Add(receiver);
         }
+    }
+
+    private static RadioSendAttemptEvent CreateSendAttempt(RadioChannelPrototype channel, EntityUid radioSource)
+    {
+#if VOICECHAT_RADIO_SEND_FREQUENCY
+        return new RadioSendAttemptEvent(channel, radioSource, channel.Frequency);
+#else
+        return new RadioSendAttemptEvent(channel, radioSource);
+#endif
     }
 
     private bool HasActiveServer(MapId mapId, string channelId)
@@ -423,12 +437,10 @@ public sealed partial class VoiceRadioSystem : EntitySystem, IVoiceFeature
         return channels.Select(id => id.Id);
     }
 
-#if VOICECHAT_SERVER_COMPONENTS
     private static IEnumerable<string> ChannelIds(IEnumerable<string> channels)
     {
         return channels;
     }
-#endif
 
     private bool PassesSend(RadioChannelPrototype channel, EntityUid uid)
     {

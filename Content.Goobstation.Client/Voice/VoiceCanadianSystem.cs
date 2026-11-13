@@ -37,10 +37,14 @@ public sealed partial class VoiceCanadianSystem : EntitySystem
     private readonly Dictionary<NetEntity, float> _levels = new();
     private readonly List<EntityUid> _stopped = new();
 
+    private bool _hooked;
+
     public override void Initialize()
     {
         base.Initialize();
+        // Do not compare the delegate. Delegate.op_Equality is rejected by the client sandbox.
         VoiceIndicatorHooks.ReplacesIndicator = ReplacesIndicator;
+        _hooked = true;
 
         SubscribeLocalEvent<VoiceChatCanadianComponent, BeforePostShaderRenderEvent>(OnBeforeRender);
         SubscribeLocalEvent<VoiceChatCanadianComponent, ComponentShutdown>(OnShutdown);
@@ -48,8 +52,11 @@ public sealed partial class VoiceCanadianSystem : EntitySystem
 
     public override void Shutdown()
     {
-        if (VoiceIndicatorHooks.ReplacesIndicator == ReplacesIndicator)
+        if (_hooked)
+        {
             VoiceIndicatorHooks.ReplacesIndicator = null;
+            _hooked = false;
+        }
 
         base.Shutdown();
 

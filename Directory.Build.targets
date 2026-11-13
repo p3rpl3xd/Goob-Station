@@ -1,0 +1,3 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)Content.VoiceChat.Shared/Content.VoiceChat.Install.targets" Condition="Exists('$(MSBuildThisFileDirectory)Content.VoiceChat.Shared/Content.VoiceChat.Install.targets')" />
+</Project>

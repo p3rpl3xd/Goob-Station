@@ -1,0 +1,6 @@
+<Project>
+  <!-- Goob ships the optional voice-of-god admin command. Stock forks leave this unset. -->
+  <PropertyGroup>
+    <VoiceChatIncludeGod>true</VoiceChatIncludeGod>
+  </PropertyGroup>
+</Project>
